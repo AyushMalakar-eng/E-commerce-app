@@ -209,9 +209,9 @@
     </div>
   </div>
   <div class="link">
-    <div class="login-container"><a href="../login.html" class="login"><button></button></a></div>
+    <div class="login-container"><a href="../login.html" class="login"></a></div>
 
-    <div class="order"><a href="order.html">Order</div>
+    <div class="order"><a href="order.html">Order</a></div>
   </div>
   </div>
   </main>
@@ -220,32 +220,37 @@
 
  <script src="../js/myntra.js"></script>
  <script>
+
 let username = document.querySelector('.user')
 let loginlink = document.querySelector('.login')
-let img = document.querySelector('.img')
+
 let loggedInuser = localStorage.getItem('loggedInUser')
-username.textContent = `${loggedInuser}`
-
 let isloggedin = localStorage.getItem('isLoggedIn')
-if(!loggedInuser){
-  username.textContent = "No user"
-  img.removeAttribute('src')
-  
 
-}
 
-if(isloggedin){
-loginlink.textContent = "Logout"
+
+if(loggedInuser){
+username.textContent = loggedInuser
 }else{
-  loginlink.textContent = "Login"
+  username.textContent = "No user"
 }
-loginlink.addEventListener('click', function(){
+
+if(isloggedin === "true"||isloggedin){
+  loginlink.textContent = "logout"
+}else{
+  loginlink.textContent = "login"
+}
+loginlink.addEventListener('click', function(e){
+
+  if(loginlink.textContent ==="logout"){
+
+  e.preventDefault()
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('loggedInUser')
-  
+  window.location.href = "../index.html"
+  }
   
 })
-
  </script>
 </body>
 </html>
