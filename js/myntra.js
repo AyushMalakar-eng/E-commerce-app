@@ -69,7 +69,7 @@ let currentPage = itemsContainers.getAttribute("data-category");
  innerHtml +=`
     <div class="item-container">
 
-        <img class="item-image"src="${item.image}" alt="">
+        <img class="item-image" src="${window.location.pathname.includes('/pages/') ? '../' + item.image : item.image}" alt="">
         
         <div class="rating">
          ${item.rating.stars} | ${item.rating.count}
