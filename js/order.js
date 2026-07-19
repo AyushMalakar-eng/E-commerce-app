@@ -49,7 +49,7 @@ let orderItemStr = localStorage.getItem(`orderItem_${currentUser}`)
   return `
     <div class="order-container">
     <div class="item-left-part">
-            <img src=${item.image} alt="" class="bag-item-img">
+            <imgsrc="${window.location.pathname.includes('/pages/') ? '../' + item.image : item.image}" alt="" class="bag-item-img">
           </div>
           <div class="item-right-part">
             <div class="company_name">${item.company}</div>
