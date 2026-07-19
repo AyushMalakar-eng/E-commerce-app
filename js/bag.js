@@ -1,60 +1,76 @@
 
- let bagItemObject;
+let bagItemObject;
+
 
 onload()
+
 function onload(){
+  let checkLogged = localStorage.getItem('isLoggedIn') === 'true';
+  let currentUser = localStorage.getItem('loggedInUser');
+  
+  if(!checkLogged || !currentUser){
+    alert('Please login to view your bag');
+    window.location.href = window.location.pathname.includes('/pages/') ? '../login.html' : 'login.html';
+    return;
+  }
+
+  let bagItemStr = localStorage.getItem(`bagItems_${currentUser}`);
+  bagItems = bagItemStr ? JSON.parse(bagItemStr) : [];
    
   loadBagItemObject()
   displayBagItem()
   bagsummary()
-
-
 }
 
 function loadBagItemObject(){
-
- bagItemObject = bagItems.map(itemId => {
-  for(let i = 0 ; i <= items.length; i++){
-    if(itemId == items[i].id){
-      return items[i]
-    }
+  if(!bagItems || bagItems.length === 0){
+    bagItemObject = [];
+    return;
   }
 
-})
-
+  bagItemObject = bagItems.map(itemId => {
+    for(let i = 0 ; i < items.length; i++){
+      if(itemId == items[i].id){
+        return items[i]
+      }
+    }
+  }).filter(item => item !== undefined); 
 }
 
 function displayBagItem(){
   let itemContainer = document.querySelector('.bag-items-container')
+  if(!itemContainer) return;
+
   let innerHtml ='';
   bagItemObject.forEach(bagItem => {
     innerHtml += generateItem(bagItem)
-    
   });
  
   itemContainer.innerHTML = innerHtml;
   let emptymessage = document.querySelector('.empty-message');
-  if(bagItemObject.length == 0){
-    emptymessage.style.display  = 'block'
-  
+  if(emptymessage){
+    if(bagItemObject.length == 0){
+      emptymessage.style.display  = 'block'
+    } else {
+      emptymessage.style.display  = 'none'
+    }
   }
- 
 }
 
 function removeitem(itemId){
+  let currentUser = localStorage.getItem('loggedInUser');
   bagItems = bagItems.filter(bagitemId => bagitemId != itemId );
 
-  localStorage.setItem("bagItems" , JSON.stringify(bagItems))
+  
+  localStorage.setItem(`bagItems_${currentUser}` , JSON.stringify(bagItems))
+  
   loadBagItemObject();
   displayBagItem();
-  bagsummary()
-  showAddToBag()
-  
-  
+  bagsummary();
+  if (typeof showAddToBag === 'function') {
+    showAddToBag();
+  }
 }
-
-
-
 
 function generateItem(item){
   const itemQty = item.quantity || 1;
@@ -69,7 +85,6 @@ function generateItem(item){
             <span class="current-price">Rs${item.currentPrice}</span>
             <span class="original-price">Rs${item.originalPrice}</span>
             <span class="discount-percentage">(${item.discount})</span>
-           
             </div>
             <div class="quantity-controller" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
               <button onclick="changeQuantity(${item.id}, -1)" style="padding: 2px 8px; cursor: pointer;">-</button>
@@ -84,37 +99,32 @@ function generateItem(item){
               Deliverd by
               <span class="delivery-details-days">10 oct 2025</span>
             </div>
-
           </div>
           <div class="remove-from-cart" onclick="removeitem(${item.id})">X</div>
         </div>`
 }
 
-
 function changeQuantity(itemId, change) {
   let item = bagItemObject.find(prod => prod.id === itemId);
-  
   if (item) {
     if (!item.quantity) {
       item.quantity = 1;
     }
-    
     item.quantity += change;
-    
     if (item.quantity < 1) {
       item.quantity = 1; 
     }
-    
-   
     displayBagItem();
     bagsummary();      
-} 
+  } 
 }
- function bagsummary(){
-  let bagSummary = document.querySelector(".bag-summary")
 
-     let totalPrice = bagItemObject.reduce( (acc,item) =>{
-      let qty = item.quantity || 1;
+function bagsummary(){
+  let bagSummary = document.querySelector(".bag-summary")
+  if(!bagSummary) return;
+
+  let totalPrice = bagItemObject.reduce( (acc,item) =>{
+    let qty = item.quantity || 1;
     return  acc + Number((item.originalPrice )* qty) ;
   },0)
 
@@ -124,13 +134,11 @@ function changeQuantity(itemId, change) {
   },0)
   let convenience = 99;
   let totalAmount = (totalPrice - discountAmount) + convenience;
-
-let totalItemsCount = bagItemObject.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  let totalItemsCount = bagItemObject.reduce((acc, item) => acc + (item.quantity || 1), 0);
   
-
-if(bagItemObject.length > 0 ) {
-  bagSummary.style.visibility = 'visible'
-  bagSummary.innerHTML = `<div class="bag-details-container">
+  if(bagItemObject.length > 0 ) {
+    bagSummary.style.visibility = 'visible'
+    bagSummary.innerHTML = `<div class="bag-details-container">
           <div class="price-header">PRICE DETAILS (${totalItemsCount} items)</div>
           <div class="price-item">
             <span class="price-item-tag"> Total Rs </span>
@@ -162,36 +170,38 @@ if(bagItemObject.length > 0 ) {
       <button  class="order-btn">Confirm Order</button>
     </form>
    </div>
-   </div>
-      `
-        placeorder()
-}else{
-  bagSummary.style.visibility = "hidden"
+   </div>`
+    placeorder()
+  }else{
+    bagSummary.style.visibility = "hidden"
+  }
 }
-  
- }
- 
- function placeorder(){
-  let btn = document.querySelector('.btn-placed-order');
 
-btn.addEventListener("click", function(){
-  let formcontainer = document.querySelector('.form-container')
-  formcontainer.style.display = "block"
-  console.log("click")
-})
+function placeorder(){
+  let currentUser = localStorage.getItem('loggedInUser')
+  let btn = document.querySelector('.btn-placed-order');
+  if(!btn) return;
+
+  btn.addEventListener("click", function(){
+    let formcontainer = document.querySelector('.form-container')
+    if(formcontainer) formcontainer.style.display = "block"
+  })
  
-let confirmOrder = document.querySelector('.form')
+  let confirmOrder = document.querySelector('.form')
+  if(!confirmOrder) return;
+
   confirmOrder.addEventListener('submit', function(event){
-     event.preventDefault()
+    event.preventDefault()
    
     let name = document.querySelector('.name-input')
     let address= document.querySelector('.address-input')
     let number = document.querySelector('.number-input')
 
-    let nameDetail = document.querySelector('.name-input').value
-    let addressDetail = document.querySelector('.address-input').value
+    let nameDetail = name.value
+    let addressDetail = address.value
+
     if(name.value.trim() == "") {
-     return  alert("please enter your name")
+      return alert("please enter your name")
     }
     if(address.value.trim() ==""){
       return alert("please enter address")
@@ -200,27 +210,25 @@ let confirmOrder = document.querySelector('.form')
        return alert("please enter correct number")
     }
     
-      let formcontainer = document.querySelector('.form-container')
-  formcontainer.style.display = "none"
+    let formcontainer = document.querySelector('.form-container')
+    if(formcontainer) formcontainer.style.display = "none"
 
-
-  let newOrder = {
-    orderDate: new Date().toLocaleDateString(),
-    customerName: nameDetail,
-    customerAddress: addressDetail,
-    items: bagItemObject,
-  };
+    let newOrder = {
+      orderDate: new Date().toLocaleDateString(),
+      customerName: nameDetail,
+      customerAddress: addressDetail,
+      items: bagItemObject,
+    };
  
-  let existingOrders = JSON.parse(localStorage.getItem('orderItem')) ||[];
-  
 
-  existingOrders.push(newOrder)
-
-  localStorage.setItem("orderItem", JSON.stringify(existingOrders))
-   alert(`Order placed Successfully ${bagItemObject.length}`);
-})
-
- }
-
-
-  
+    let existingOrders = JSON.parse(localStorage.getItem(`orderItem_${currentUser}`)) ||[];
+    existingOrders.push(newOrder)
+    localStorage.setItem(`orderItem_${currentUser}`, JSON.stringify(existingOrders))
+    
+    
+    localStorage.removeItem(`bagItems_${currentUser}`);
+    
+    alert(`Order placed Successfully `);
+    window.location.href = 'index.html';
+  })
+}
